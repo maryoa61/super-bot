@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     OXAPAY_MERCHANT_KEY: str = ""
     ZARINPAL_MERCHANT_ID: str = ""
 
+    # --- optional stores (self-contained; safe to leave at defaults) ---
+    VPS_STORE_ENABLED: bool = True
+
     @property
     def admin_id_list(self) -> list[int]:
         return [int(x) for x in self.ADMIN_IDS.split(",") if x.strip()]

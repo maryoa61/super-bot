@@ -47,6 +47,28 @@ python main.py
 
 اضافه کردن درگاه جدید یعنی: یک کلاس در `gateways/` که `PaymentGateway` (در `gateways/base.py`) رو پیاده‌سازی می‌کنه، بعد یک خط در رجیستری `gateways/__init__.py`. کد handlers/models نیازی به تغییر نداره.
 
+## فروشگاه VPS (ماژول مجزا)
+
+یه ماژول کاملاً مستقل برای فروش پلن‌های آماده‌ی VPS، بدون هیچ وابستگی به جدول‌ها یا هندلرهای فلوی تستی VPN بالا:
+
+- **کاتالوگ:** `core/models/vps.py` (مدل `VpsPlan`)
+- **پرداخت:** intent‌های خودش رو جدا نگه می‌داره (`VpsPaymentIntent`) و فاکتور Stars رو مستقیم با payload به‌شکل `vpsintent:<id>` می‌سازه — به `PaymentIntent`/`WalletLedger` موجود دست نمی‌زنه.
+- **تحویل:** خودکار/API پنل هایپروایزر نداره؛ بعد از پرداخت موفق سفارش (`VpsOrder`) با وضعیت `pending_provision` ساخته می‌شه، ادمین‌ها نوتیف می‌گیرن، و ادمین با `/vps_fulfill` مشخصات سرور رو دستی وارد و برای خریدار ارسال می‌کنه.
+
+فعال/غیرفعال بودنش با `VPS_STORE_ENABLED` توی `.env` کنترل می‌شه (پیش‌فرض: فعال). اگه `false` باشه، روتر `handlers/vps.py` اصلاً include نمی‌شه.
+
+جدول‌های `vps_plans`, `vps_payment_intents`, `vps_orders` نیازی به مایگریشن دستی ندارن — چون `db.py` با `Base.metadata.create_all` روی استارت اجرا می‌شه، همون اولین بار که بات بالا میاد ساخته می‌شن.
+
+### دستورات
+
+| دستور | کاربر |
+|---|---|
+| `/vps` | همه — لیست پلن‌های فعال با دکمه‌ی خرید |
+| `/vps_add_plan <price>\|<title>\|<cpu_cores>\|<ram_gb>\|<disk_gb>\|<location>\|<duration_days>` | فقط ادمین (`ADMIN_IDS`) |
+| `/vps_disable_plan <plan_id>` | فقط ادمین |
+| `/vps_orders` | فقط ادمین — سفارش‌های در انتظار تحویل |
+| `/vps_fulfill <order_id> <مشخصات سرور>` | فقط ادمین — تحویل سفارش + DM به خریدار |
+
 ## نکات امنیتی
 
 - `.env` هیچ‌وقت commit نمی‌شه (در `.gitignore` هست)

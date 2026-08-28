@@ -60,7 +60,7 @@ async def process_pre_checkout(pre_checkout_q: PreCheckoutQuery) -> None:
     await pre_checkout_q.answer(ok=True)
 
 
-@router.message(F.successful_payment)
+@router.message(F.successful_payment.invoice_payload.startswith("intent:"))
 async def process_successful_payment(message: Message, session: AsyncSession, bot: Bot) -> None:
     payment = message.successful_payment
     intent_id = int(payment.invoice_payload.removeprefix("intent:"))
