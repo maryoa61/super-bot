@@ -60,18 +60,22 @@ def _plan_caption(plan: VpsPlan) -> str:
 
 @router.message(Command("vps"))
 async def cmd_vps_list(message: Message, session: AsyncSession) -> None:
+    await send_plan_list(message, session)
+
+
+async def send_plan_list(reply_to: Message, session: AsyncSession) -> None:
     result = await session.execute(
         select(VpsPlan).where(VpsPlan.is_active.is_(True)).order_by(VpsPlan.price.asc())
     )
     plans = result.scalars().all()
     if not plans:
-        await message.answer("در حال حاضر پلن فعالی برای فروش نیست.")
+        await reply_to.answer("در حال حاضر پلن فعالی برای فروش نیست.")
         return
 
     for plan in plans:
         kb = InlineKeyboardBuilder()
         kb.button(text=f"خرید — {plan.price} ⭐️", callback_data=f"vpsbuy:{plan.id}")
-        await message.answer(_plan_caption(plan), reply_markup=kb.as_markup())
+        await reply_to.answer(_plan_caption(plan), reply_markup=kb.as_markup())
 
 
 @router.callback_query(F.data.startswith("vpsbuy:"))

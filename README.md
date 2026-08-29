@@ -69,6 +69,62 @@ python main.py
 | `/vps_orders` | فقط ادمین — سفارش‌های در انتظار تحویل |
 | `/vps_fulfill <order_id> <مشخصات سرور>` | فقط ادمین — تحویل سفارش + DM به خریدار |
 
+## فروشگاه محتوا (ماژول مجزا)
+
+فروش فایل/محتوای دیجیتال (ebook، template، ویدیو) — کالای نامحدود، هر بار خرید همون فایل/لینک دوباره تحویل داده می‌شه.
+
+- **کاتالوگ:** `core/models/content.py` (مدل `ContentProduct`، نوع تحویل `file` یا `link`)
+- **پرداخت:** `ContentPaymentIntent` جدا، payload به‌شکل `contentintent:<id>`
+- **تحویل:** آنی — همون لحظه‌ی پرداخت موفق، فایل (با `file_id` ذخیره‌شده) یا لینک ارسال می‌شه
+
+فعال/غیرفعال: `CONTENT_STORE_ENABLED` در `.env`.
+
+| دستور | کاربر |
+|---|---|
+| `/content` | همه — لیست محصولات فعال |
+| `/content_add_link <price>\|<title>\|<description>\|<url>` | فقط ادمین |
+| `/content_add_file <price>\|<title>\|<description>` (به‌صورت caption یه فایل/ویدیو/عکس آپلودی) | فقط ادمین |
+| `/content_disable <product_id>` | فقط ادمین |
+
+## فروشگاه لایسنس / اکانت آماده (ماژول مجزا)
+
+فروش کلید لایسنس یا اکانت آماده (SaaS keys، game accounts) — کالای موجودی‌محور؛ هر آیتم فقط یک‌بار فروخته می‌شه.
+
+- **کاتالوگ:** `core/models/licenses.py` (مدل `LicenseProduct` + `LicenseStockItem`)
+- **پرداخت:** `LicensePaymentIntent` جدا، payload به‌شکل `licenseintent:<id>`
+- **تحویل:** بعد از پرداخت موفق، یه آیتم از استوک به‌صورت **اتمیک** (یه دستور `UPDATE ... WHERE id = (SELECT ... LIMIT 1)`) claim و برای خریدار ارسال می‌شه — دو خریدار هم‌زمان هرگز یه کلید مشترک نمی‌گیرن. اگه دقیقاً هم‌زمان با تمام‌شدن موجودی این اتفاق بیفته (خیلی نادر)، به ادمین‌ها هشدار داده می‌شه.
+
+فعال/غیرفعال: `LICENSE_STORE_ENABLED` در `.env`.
+
+| دستور | کاربر |
+|---|---|
+| `/licenses` | همه — لیست محصولات فعال + موجودی |
+| `/license_add_product <price>\|<title>\|<description>\|<category>` | فقط ادمین |
+| `/license_add_stock <product_id>\|<secret_data>` (هر بار یه آیتم) | فقط ادمین |
+| `/license_disable <product_id>` | فقط ادمین |
+| `/license_stock_count <product_id>` | فقط ادمین |
+
+## فروشگاه کارت هدیه / ووچر دیجیتال (ماژول مجزا)
+
+از نظر منطق دقیقاً مثل فروشگاه لایسنسه (موجودی‌محور، claim اتمیک)، فقط جدول‌ها و هندلر جداگانه دارن چون قرار بود هر فروشگاه کاملاً مستقل باشه.
+
+- **کاتالوگ:** `core/models/giftcards.py` (مدل `GiftCardProduct` + `GiftCardStockItem`)
+- **پرداخت:** `GiftCardPaymentIntent` جدا، payload به‌شکل `giftcardintent:<id>`
+
+فعال/غیرفعال: `GIFTCARD_STORE_ENABLED` در `.env`.
+
+| دستور | کاربر |
+|---|---|
+| `/giftcards` | همه — لیست کارت‌های فعال + موجودی |
+| `/giftcard_add_product <price>\|<title>\|<description>\|<value_label>` | فقط ادمین |
+| `/giftcard_add_stock <product_id>\|<code>` (هر بار یه کد) | فقط ادمین |
+| `/giftcard_disable <product_id>` | فقط ادمین |
+| `/giftcard_stock_count <product_id>` | فقط ادمین |
+
+## منوی دائمی ربات
+
+`/start` یه `ReplyKeyboardMarkup` ثابت (نه inline زیر یه پیام) نشون می‌ده که همیشه پایین صفحه می‌مونه: کیف پول، خرید تست VPN، و دکمه‌ی هر فروشگاهی که فعاله. هیچ جدول/داده‌ی جدیدی نمی‌سازه، فقط دکمه‌ها همون توابع `/buy`, `/vps`, `/content`, `/licenses`, `/giftcards` رو صدا می‌زنن.
+
 ## نکات امنیتی
 
 - `.env` هیچ‌وقت commit نمی‌شه (در `.gitignore` هست)

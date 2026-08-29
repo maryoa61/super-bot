@@ -22,6 +22,9 @@ class Settings(BaseSettings):
 
     # --- optional stores (self-contained; safe to leave at defaults) ---
     VPS_STORE_ENABLED: bool = True
+    CONTENT_STORE_ENABLED: bool = True
+    LICENSE_STORE_ENABLED: bool = True
+    GIFTCARD_STORE_ENABLED: bool = True
 
     @property
     def admin_id_list(self) -> list[int]:

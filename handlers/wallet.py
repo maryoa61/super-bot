@@ -17,12 +17,30 @@ TEST_PLAN_STARS_PRICE = Decimal("50")
 
 @router.message(Command("buy"))
 async def cmd_buy(message: Message, session: AsyncSession) -> None:
-    result = await session.execute(
-        select(User).where(User.telegram_id == message.from_user.id)
-    )
+    await send_test_invoice(message, session, message.from_user.id)
+
+
+@router.message(Command("wallet"))
+async def cmd_wallet(message: Message, session: AsyncSession) -> None:
+    await send_wallet_balance(message, session, message.from_user.id)
+
+
+async def send_wallet_balance(reply_to: Message, session: AsyncSession, telegram_id: int) -> None:
+    result = await session.execute(select(User).where(User.telegram_id == telegram_id))
     user = result.scalar_one_or_none()
     if user is None:
-        await message.answer("اول /start رو بزن.")
+        await reply_to.answer("اول /start رو بزن.")
+        return
+
+    balance = await get_balance(session, user.id)
+    await reply_to.answer(f"💳 موجودی کیف پول: {balance} استارز")
+
+
+async def send_test_invoice(reply_to: Message, session: AsyncSession, telegram_id: int) -> None:
+    result = await session.execute(select(User).where(User.telegram_id == telegram_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        await reply_to.answer("اول /start رو بزن.")
         return
 
     intent = PaymentIntent(
@@ -43,7 +61,7 @@ async def cmd_buy(message: Message, session: AsyncSession) -> None:
         payment_intent_id=intent.id,
     )
 
-    await message.answer_invoice(
+    await reply_to.answer_invoice(
         title=invoice.title,
         description=invoice.description,
         payload=invoice.payload,
