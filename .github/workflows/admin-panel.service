@@ -1,0 +1,15 @@
+[Unit]
+Description=Super Bot Admin Panel (Flask)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/super-bot
+Environment=ADMIN_PANEL_PORT=8000
+ExecStart=/opt/super-bot/.venv/bin/python admin_panel.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
